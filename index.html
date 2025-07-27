@@ -14,7 +14,7 @@
         - Today's Plan: Report Info (Daily Schedule) -> Goal (Provide a clear daily checklist) -> Presentation (Dynamically injected timeline of cards) -> Interaction (JS highlights current time block, checkboxes to mark tasks complete, Clear All Tasks button) -> Justification (Makes the daily plan actionable and interactive).
         - Learning Roadmap: Report Info (Monthly Focus) -> Goal (Organize strategic plan) -> Presentation (Dynamically injected collapsible accordion sections) -> Interaction (Click to expand/collapse, now with re-attached event listeners for dynamic content) -> Justification (Prevents information overload and keeps the view clean).
         - Resources: Report Info (List of links) -> Goal (Make resources findable) -> Presentation (Dynamically injected categorized list) -> Interaction (Live search/filter bar, Clear Search button) -> Justification (Improves usability by allowing quick lookups).
-        - Job Application Strategy: Report Info (Comprehensive guidance text) -> Goal (Provide structured advice) -> Presentation (Dynamically injected sections with headings and list items from structured JS data, using simplified HTML generation for robustness) -> Interaction (Tab click to display) -> Justification (Ensures content is presented clearly and dynamically, avoiding static HTML duplication, and explicitly sets title/description with robust error handling).
+        - Job Application Strategy: Report Info (Comprehensive guidance text) -> Goal (Provide structured advice) -> Presentation (Dynamically rendered sections with headings and list items from structured JS data, using simplified HTML generation for robustness) -> Interaction (Tab click to display) -> Justification (Ensures content is presented clearly and dynamically, avoiding static HTML duplication, and explicitly sets title/description with robust error handling).
         - Weekly View Projects: Report Info (Weekly/Monthly project list) -> Goal (Show project progression) -> Presentation (Dynamically injected list grouped by month within Weekly View) -> Interaction (Display on tab click) -> Justification (Provides a clear overview of project deliverables alongside weekly routine).
     --> <!-- Comment: Details the choices made for content presentation and interactivity for each section -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. --> <!-- Comment: Confirms adherence to specified graphic library constraints -->
@@ -56,7 +56,7 @@
             margin-left: auto; /* Centers the container horizontally */
             margin-right: auto; /* Centers the container horizontally */
             height: 250px; /* Sets a default height for the chart container */
-            max-height: 300px; /* Sets a maximum height to prevent excessive vertical space */
+            max-height: 300px; /* Max height to prevent excessive vertical space */
         }
         /* Adjust height for larger screens */ /* Comment: Explains media query for chart container height */
         @media (min-width: 768px) { /* Media query for screens wider than 768px (medium devices and up) */
@@ -190,13 +190,90 @@
                         { week: "Week 11", description: "Integrate your Express API with a database to persist data." }, // Project item
                         { week: "Week 12", description: "Add basic user authentication to your full-stack application." }, // Project item
                         { week: "Monthly Project", description: "A full-stack application with a React (or chosen frontend) client, an Express.js backend, and a database (e.g., a simple e-commerce site, a social media clone, or a task management system). Deploy both frontend and backend." } // Project item
-                    ]},
-                    { title: "Beyond Month 3: Continuous Growth & Specialization", projects: [ // Monthly project group
-                        { week: "Deep Dive", description: "Choose an area to specialize or deepen your knowledge (e.g., DevOps, Cloud (AWS/Azure/GCP), specific database, WebSockets, GraphQL, testing, performance optimization)." }, // Project item
-                        { week: "Advanced Projects", description: "Build more complex, real-world applications. Collaborate on open-source projects." }, // Project item
-                        { week: "Continuous Learning", description: "The tech world evolves rapidly. Keep learning new tools and best practices." }, // Project item
-                        { week: "Job Applications", description: "Continue refining your resume, portfolio, and interview skills. Network actively." } // Project item
                     ]}
+                ],
+                // Corrected and fully defined roadmap data
+                roadmap: [ 
+                    { title: "Month 1: Frontend Foundations (Weeks 1-4)", content: `
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 1: HTML Basics & Semantic Structure</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: HTML tags, semantic HTML5, forms, accessibility basics.</li>
+                            <li>Weekly Project: A multi-page personal portfolio website (static HTML/CSS).</li>
+                        </ul>
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 2: CSS Fundamentals & Layouts (Flexbox)</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: Selectors, properties, box model, responsive design principles, Flexbox.</li>
+                            <li>Weekly Project: Recreate a simple website layout using Flexbox.</li>
+                        </ul>
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 3: Advanced CSS (Grid, Animations, Responsiveness)</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: CSS Grid, transitions, animations, media queries, mobile-first design.</li>
+                            <li>Weekly Project: A responsive landing page with animations.</li>
+                        </ul>
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 4: JavaScript Basics & DOM Manipulation</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: Variables, data types, operators, control flow, functions, DOM manipulation.</li>
+                            <li>Weekly Project: A simple interactive web app (e.g., a to-do list, a calculator).</li>
+                        </ul>
+                        <p class="text-stone-600 mt-2"><strong>Monthly Project:</strong> A fully responsive, interactive personal portfolio website using HTML, CSS, and vanilla JavaScript, showcasing your best weekly projects.</p>
+                        <p class="text-stone-600"><strong>Job Prep:</strong> Start building your GitHub profile. Research different frontend roles.</p>
+                    ` },
+                    { title: "Month 2: Modern Frontend Development (React/Vue/Angular) (Weeks 5-8)", content: `
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 5: JavaScript ES6+ & Asynchronous JS</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: Arrow functions, destructuring, spread/rest, Promises, Async/Await, Fetch API.</li>
+                            <li>Weekly Project: Fetch data from a public API and display it.</li>
+                        </ul>
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 6: Introduction to React (or chosen framework)</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: Components, props, state, JSX, component lifecycle (functional components & hooks).</li>
+                            <li>Weekly Project: Build a small component library or a simple counter app.</li>
+                        </ul>
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 7: React State Management & Routing</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: useState, useEffect, useContext, basic routing (e.g., react-router-dom concepts).</li>
+                            <li>Weekly Project: A multi-page React application (e.g., a simple blog with different routes).</li>
+                        </ul>
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 8: Advanced React & API Integration</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: Custom hooks, performance optimization basics, integrating with a mock API.</li>
+                            <li>Weekly Project: A more complex React app that consumes a real (or mock) REST API (e.g., a movie search app).</li>
+                        </ul>
+                        <p class="text-stone-600 mt-2"><strong>Monthly Project:</strong> A fully functional Single Page Application (SPA) using your chosen framework, integrating with a public API, and demonstrating good component structure and state management.</p>
+                        <p class="text-stone-600"><strong>Job Prep:</strong> Start tailoring your resume for frontend roles. Begin practicing common JavaScript/framework interview questions.</p>
+                    ` },
+                    { title: "Month 3: Backend Fundamentals & Full-Stack Integration (Weeks 9-12)", content: `
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 9: Node.js & npm Basics</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: Node.js runtime, npm, modules, file system, event loop basics.</li>
+                            <li>Weekly Project: A simple command-line tool using Node.js.</li>
+                        </ul>
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 10: Express.js & REST APIs</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: Building RESTful APIs with Express.js, middleware, routing, request/response cycle.</li>
+                            <li>Weekly Project: A simple REST API for a to-do list or blog posts.</li>
+                        </ul>
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 11: Databases (e.g., MongoDB/PostgreSQL) & ORMs/ODMs</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: Introduction to databases (SQL vs. NoSQL), basic CRUD operations, connecting Node.js to a database (e.g., Mongoose for MongoDB, Sequelize for PostgreSQL).</li>
+                            <li>Weekly Project: Integrate your Express API with a database to persist data.</li>
+                        </ul>
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 12: Authentication & Deployment Basics</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: Basic authentication concepts (e.g., JWT), environment variables, simple deployment to a free platform (e.g., Vercel for frontend, Render/Heroku for backend).</li>
+                            <li>Weekly Project: Add basic user authentication to your full-stack application.</li>
+                        </ul>
+                        <p class="text-stone-600 mt-2"><strong>Monthly Project:</strong> A full-stack application with a React (or chosen frontend) client, an Express.js backend, and a database (e.g., a simple e-commerce site, a social media clone, or a task management system). Deploy both frontend and backend.</p>
+                        <p class="text-stone-600"><strong>Job Prep:</strong> Update your resume to reflect full-stack skills. Start applying for junior frontend/full-stack roles. Prepare for technical interviews that cover both frontend and backend.</p>
+                    ` },
+                    { title: "Beyond Month 3: Continuous Growth & Specialization", content: `
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li><strong>Deep Dive:</strong> Choose an area to specialize or deepen your knowledge (e.g., DevOps, Cloud (AWS/Azure/GCP), specific database, WebSockets, GraphQL, testing, performance optimization).</li>
+                            <li><strong>Advanced Projects:</strong> Build more complex, real-world applications. Collaborate on open-source projects.</li>
+                            <li><strong>Continuous Learning:</strong> The tech world evolves rapidly. Keep learning new tools and best practices.</li>
+                            <li><strong>Job Applications:</strong> Continue refining your resume, portfolio, and interview skills. Network actively.</li>
+                        </ul>
+                    `}
                 ],
                 goals: [ // Data for goals
                     { icon: "🚀", text: "Complete at least one robust full-stack application from scratch." }, // Goal item
@@ -211,6 +288,7 @@
                     { category: "Deployment & Version Control", items: [{ name: "AWS Free Tier Tutorials", url: "https://aws.amazon.com/free/" }, { name: "Git Documentation", url: "https://git-scm.com/doc" }, { name: "GitHub Guides", url: "https://github.com/git-guides" }] }, // Resource category and items
                     { category: "UI Components & Charts", items: [{ name: "Shadcn/ui", url: "https://ui.shadcn.com/" }, { name: "Lucide React", url: "https://lucide.dev/guide/packages/lucide-react" }, { name: "Recharts", url: "https://recharts.org/en-US" }] }, // Resource category and items
                     { category: "Google Docs For Notes", items: [{ name: "Notes", url: "https://docs.google.com/document/d/1o4jrc_sIj5bKVkv-dJIYVwvZMR82wTY69OTT9RkkMNQ/edit?usp=sharing" }] } // Resource category and items
+
                 ],
                 progress: { // Data for tracking progress
                     applicationsSent: 0, // Current total of applications sent
@@ -420,7 +498,7 @@
                             contentHtml += accordion; // Appends the accordion HTML
                         });
                     } else {
-                        console.error('Error: appData.roadmap is undefined or not an array.'); // Logs an error if roadmap data is invalid
+                        console.error('Error: appData.roadmap is undefined or not an array. Current value:', appData.roadmap); // Logs a more detailed error
                         contentHtml += '<p class="text-stone-500">Roadmap content is not available.</p>'; // Displays a fallback message
                     }
                     contentHtml += '</div>'; // Closes the wrapping div
@@ -449,12 +527,12 @@
                     let contentHtml = `
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8"> <!-- Grid container for goals and charts -->
                             <div id="overall-goals-container" class="space-y-4"> <!-- Container for individual goal cards -->
-                                ${appData.goals.map(goal => ` <!-- Maps each goal to a goal card -->
+                                ${appData.goals && Array.isArray(appData.goals) ? appData.goals.map(goal => ` <!-- Maps each goal to a goal card -->
                                     <div class="flex items-start bg-white p-4 rounded-xl border border-stone-200 shadow-sm"> <!-- Goal card -->
                                         <span class="text-2xl mr-4">${goal.icon}</span> <!-- Goal icon -->
                                         <p class="text-stone-700 font-medium">${goal.text}</p> <!-- Goal text -->
                                     </div>
-                                `).join('')}
+                                `).join('') : '<p class="text-stone-500">Goals content is not available.</p>'}
                             </div>
                             <div> <!-- Container for charts and input -->
                                 <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm mb-8"> <!-- Container for total progress chart -->
@@ -496,7 +574,8 @@
             // Moved chart rendering functions outside renderGoals to be callable directly
             function renderProgressChart() { // Function to render the progress donut chart
                 const ctx = document.getElementById('progressChart')?.getContext('2d'); // Gets the 2D rendering context of the canvas (optional chaining for safety)
-                if (!ctx) { console.error('progressChart canvas context not found'); return; } // Logs error and exits if context not found
+                // Add a null check for appData.progress here
+                if (!ctx || !appData.progress) { console.error('progressChart canvas context or appData.progress not found'); return; } // Logs error and exits if context or data not found
 
                 // Destroy existing chart instance if it exists
                 if (progressChart) { // Checks if a chart instance already exists
@@ -535,7 +614,8 @@
 
             function renderDailyApplicationsChart() { // Function to render the daily applications bar chart
                 const ctx = document.getElementById('dailyApplicationsChart')?.getContext('2d'); // Gets the 2D rendering context of the canvas (optional chaining for safety)
-                if (!ctx) { console.error('dailyApplicationsChart canvas context not found'); return; } // Logs error and exits if context not found
+                // Add a null check for appData.progress here
+                if (!ctx || !appData.progress) { console.error('dailyApplicationsChart canvas context or appData.progress not found'); return; } // Logs error and exits if context or data not found
 
                 // Destroy existing chart instance if it exists
                 if (dailyApplicationsChart) { // Checks if a chart instance already exists
@@ -599,7 +679,7 @@
                         const filteredItems = category.items.filter(item => item.name.toLowerCase().includes(searchTerm)); // Filters resources based on search term
                         
                         if (filteredItems.length > 0) { // If there are filtered items
-                            let itemsHtml = filteredItems.map(item => ` // Maps filtered items to HTML links
+                            let itemsHtml = filteredItems.map(item => `
                                 <a href="${item.url}" target="_blank" class="block bg-white p-4 rounded-lg border border-stone-200 hover:border-teal-500 hover:shadow-md transition-all"> <!-- Resource link -->
                                     <p class="font-semibold text-teal-700">${item.name}</p> <!-- Resource name -->
                                 </a>
