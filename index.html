@@ -8,12 +8,13 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Chosen Palette: Warm Neutrals -->
-    <!-- Application Structure Plan: The application is designed as a personal development dashboard with a fixed sidebar for navigation and a dynamic content area. This structure was chosen to transform the static plan into an active tool. The key sections are: 'Today's Plan' (the default view for immediate tasks), 'Weekly View' (for tactical planning), '6-Week Roadmap' (for strategic overview), 'Goals & Progress' (for motivation and tracking), and 'Resources' (a quick-access library). This task-oriented, dashboard approach prioritizes usability by showing the most relevant information first, while keeping the broader context easily accessible, which is more effective than a linear document. -->
+    <!-- Application Structure Plan: The application is designed as a personal development dashboard with a fixed sidebar for navigation and a dynamic content area. This structure was chosen to transform the static plan into an active tool. The key sections are: 'Today's Plan' (the default view for immediate tasks), 'Weekly View' (for tactical planning), 'Learning Roadmap' (for strategic overview), 'Goals & Progress' (for motivation and tracking), 'Resources' (a quick-access library), and 'Job Application Strategy' (a dedicated section for career guidance). This task-oriented, dashboard approach prioritizes usability by showing the most relevant information first, while keeping the broader context easily accessible, which is more effective than a linear document. -->
     <!-- Visualization & Content Choices: 
-        - Goals & Progress: Report Info (Apply to 50+ jobs) -> Goal (Track progress) -> Viz (Donut Chart via Chart.js) -> Interaction (Input field to update chart) -> Justification (Visually engaging way to track a key metric).
-        - Today's Plan: Report Info (Daily Schedule) -> Goal (Provide a clear daily checklist) -> Presentation (Timeline of cards) -> Interaction (JS highlights current time block, checkboxes to mark tasks complete) -> Justification (Makes the daily plan actionable and interactive).
-        - 6-Week Roadmap: Report Info (Monthly Focus) -> Goal (Organize strategic plan) -> Presentation (Collapsible accordion sections) -> Interaction (Click to expand/collapse) -> Justification (Prevents information overload and keeps the view clean).
-        - Resources: Report Info (List of links) -> Goal (Make resources findable) -> Presentation (Categorized list) -> Interaction (Live search/filter bar) -> Justification (Improves usability by allowing quick lookups).
+        - Goals & Progress: Report Info (Apply to 50+ jobs) -> Goal (Track progress) -> Viz (Donut Chart via Chart.js for total, Bar Chart via Chart.js for daily additions) -> Interaction (Input field to update total and daily, now supporting positive and negative inputs for corrections, and triggering update on Enter key press) -> Justification (Donut for overall progress, Bar for granular daily activity, providing comprehensive and flexible tracking without any reset button for this section).
+        - Today's Plan: Report Info (Daily Schedule) -> Goal (Provide a clear daily checklist) -> Presentation (Dynamically injected timeline of cards) -> Interaction (JS highlights current time block, checkboxes to mark tasks complete, Clear All Tasks button) -> Justification (Makes the daily plan actionable and interactive).
+        - Learning Roadmap: Report Info (Monthly Focus) -> Goal (Organize strategic plan) -> Presentation (Dynamically injected collapsible accordion sections) -> Interaction (Click to expand/collapse) -> Justification (Prevents information overload and keeps the view clean).
+        - Resources: Report Info (List of links) -> Goal (Make resources findable) -> Presentation (Dynamically injected categorized list) -> Interaction (Live search/filter bar, Clear Search button) -> Justification (Improves usability by allowing quick lookups).
+        - Job Application Strategy: Report Info (Comprehensive guidance text) -> Goal (Provide structured advice) -> Presentation (Dynamically rendered sections with headings and list items from structured JS data) -> Interaction (Tab click to display) -> Justification (Ensures content is presented clearly and dynamically, avoiding static HTML duplication, and explicitly sets title/description with robust error handling).
     -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
@@ -24,12 +25,9 @@
             width: 24px;
             height: 24px;
         }
-        .content-section {
-            display: none;
-        }
-        .content-section.active {
-            display: block;
-        }
+        /* All content sections will be dynamically injected into #dynamic-content-area */
+        /* No need for .content-section.active or display:none !important here */
+
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -48,6 +46,38 @@
         }
         .task-card:has(input:checked) label {
             text-decoration: line-through;
+        }
+        /* Specific styles for chart containers to ensure responsiveness and max-width */
+        .chart-container {
+            position: relative;
+            width: 100%; /* Take full width of parent column */
+            max-width: 400px; /* Limit max width for readability */
+            margin-left: auto;
+            margin-right: auto;
+            height: 250px; /* Default height */
+            max-height: 300px; /* Max height to prevent excessive vertical space */
+        }
+        /* Adjust height for larger screens */
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 300px;
+                max-height: 350px;
+            }
+        }
+        .daily-chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px; /* Wider for bar chart */
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .daily-chart-container {
+                height: 350px;
+                max-height: 450px;
+            }
         }
     </style>
 </head>
@@ -71,7 +101,7 @@
                 </a>
                 <a href="#" data-tab="roadmap" class="nav-link flex items-center p-3 rounded-lg text-stone-600 hover:bg-teal-50 hover:text-teal-700">
                     <span class="sidebar-icon">🗺️</span>
-                    <span class="hidden lg:block ml-4 font-medium">6-Week Roadmap</span>
+                    <span class="hidden lg:block ml-4 font-medium">Learning Roadmap</span>
                 </a>
                 <a href="#" data-tab="goals" class="nav-link flex items-center p-3 rounded-lg text-stone-600 hover:bg-teal-50 hover:text-teal-700">
                     <span class="sidebar-icon">🎯</span>
@@ -81,68 +111,25 @@
                     <span class="sidebar-icon">📚</span>
                     <span class="hidden lg:block ml-4 font-medium">Resources</span>
                 </a>
+                <a href="#" data-tab="jobStrategy" class="nav-link flex items-center p-3 rounded-lg text-stone-600 hover:bg-teal-50 hover:text-teal-700">
+                    <span class="sidebar-icon">💼</span>
+                    <span class="hidden lg:block ml-4 font-medium">Job Strategy</span>
+                </a>
             </nav>
         </aside>
 
         <!-- Main Content -->
         <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="current-tab-title" class="text-3xl font-bold text-stone-800"></h2>
+                <button id="clear-all-btn" class="px-4 py-2 bg-stone-200 text-stone-700 rounded-lg hover:bg-stone-300 transition-colors hidden"></button>
+            </div>
+            <p id="current-tab-description" class="text-stone-500 mb-6"></p>
             
-            <!-- Today's Plan Section -->
-            <section id="today" class="content-section active">
-                <h2 class="text-3xl font-bold text-stone-800 mb-2">Today's Plan</h2>
-                <p class="text-stone-500 mb-6">Your daily schedule for focused learning and development.</p>
-                <div id="daily-schedule-container" class="space-y-4"></div>
-            </section>
-
-            <!-- Weekly View Section -->
-            <section id="weekly" class="content-section">
-                <h2 class="text-3xl font-bold text-stone-800 mb-2">Weekly View</h2>
-                <p class="text-stone-500 mb-6">Your high-level plan for the week, including weekend deep dives.</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div id="weekday-schedule-container"></div>
-                    <div id="saturday-schedule-container"></div>
-                    <div id="sunday-schedule-container"></div>
-                </div>
-            </section>
-
-            <!-- 6-Week Roadmap Section -->
-            <section id="roadmap" class="content-section">
-                <h2 class="text-3xl font-bold text-stone-800 mb-2">6-Week Roadmap</h2>
-                <p class="text-stone-500 mb-6">Your strategic plan for the summer. Click each phase to expand.</p>
-                <div id="roadmap-container" class="space-y-4"></div>
-            </section>
-
-            <!-- Goals & Progress Section -->
-            <section id="goals" class="content-section">
-                <h2 class="text-3xl font-bold text-stone-800 mb-2">Goals & Progress</h2>
-                <p class="text-stone-500 mb-6">Track your progress towards your overall summer goals.</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div id="overall-goals-container" class="space-y-4"></div>
-                    <div>
-                        <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
-                            <h3 class="text-lg font-semibold mb-4">Job Application Progress</h3>
-                            <div class="chart-container relative mx-auto h-64 w-64">
-                                <canvas id="progressChart"></canvas>
-                            </div>
-                            <div class="mt-6">
-                                <label for="application-count" class="block text-sm font-medium text-stone-600">Update applications sent:</label>
-                                <div class="mt-1 flex rounded-md shadow-sm">
-                                    <input type="number" id="application-count" class="block w-full rounded-none rounded-l-md border-stone-300 focus:border-teal-500 focus:ring-teal-500 sm:text-sm" placeholder="25">
-                                    <button id="update-progress-btn" class="relative -ml-px inline-flex items-center space-x-2 rounded-r-md border border-stone-300 bg-stone-50 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-100 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">Update</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Resources Section -->
-            <section id="resources" class="content-section">
-                <h2 class="text-3xl font-bold text-stone-800 mb-2">Resources</h2>
-                <p class="text-stone-500 mb-6">A curated list of free resources to aid your learning journey.</p>
-                <input type="text" id="resource-search" class="w-full max-w-lg p-3 mb-6 border border-stone-300 rounded-lg focus:ring-2 focus:ring-teal-500" placeholder="Search for a resource (e.g., React, LeetCode)...">
-                <div id="resources-container" class="space-y-6"></div>
-            </section>
+            <!-- Dynamic Content Area -->
+            <div id="dynamic-content-area">
+                <!-- All tab content will be injected here by JavaScript -->
+            </div>
         </main>
     </div>
 
@@ -150,28 +137,123 @@
         document.addEventListener('DOMContentLoaded', function () {
             const appData = {
                 dailySchedule: [
-                    { time: "8:30 AM - 9:00 AM", task: "Review & Plan", details: "Review yesterday's progress, outline today's goals, and scan job boards." },
-                    { time: "9:00 AM - 11:00 AM", task: "Deep Dive Learning", details: "Focus on a new concept like advanced React hooks, Node.js middleware, or API design." },
-                    { time: "11:00 AM - 1:00 PM", task: "Project Implementation", details: "Apply new concepts to your main project. Build features, refine UI, and commit to GitHub." },
-                    { time: "1:00 PM - 2:00 PM", task: "Lunch & Break", details: "Time to recharge." },
-                    { time: "2:00 PM - 3:30 PM", task: "Algorithms & Data Structures", details: "Solve 2-3 LeetCode problems (Easy/Medium) and practice explaining your thought process." },
-                    { time: "3:30 PM - 5:00 PM", task: "Job Application & Customization", details: "Identify 3-5 roles and tailor your resume/cover letter for each." },
-                    { time: "5:00 PM - 6:00 PM", task: "Networking & Code Review", details: "Connect on LinkedIn, read tech blogs, and review your code." }
+                    { time: "10:30 AM - 10:45 AM", task: "Morning: Theory & Concepts", details: "Review notes from yesterday, quick recap of previous concepts." },
+                    { time: "10:45 AM - 11:30 AM", task: "Morning: Theory & Concepts", details: "Deep dive into a new concept (e.g., a specific CSS property, a JavaScript array method, a React hook, a Node.js module). Read documentation, watch a tutorial video." },
+                    { time: "11:30 AM - 12:00 PM", task: "Morning: Theory & Concepts", details: "Take detailed notes, try out small code snippets related to the new concept." },
+                    { time: "12:00 PM - 1:30 PM", task: "Afternoon: Hands-on Coding & Practice", details: "Work on a small coding challenge or exercise related to the morning's concept (e.g., freeCodeCamp challenge, LeetCode easy problem, build a tiny component)." },
+                    { time: "1:40 PM - 3:10 PM", task: "Afternoon: Hands-on Coding & Practice", details: "Dedicate time to your current project. Implement a feature, debug an issue, refactor code. This is where theory meets practice." },
+                    { time: "3:10 PM - 3:40 PM", task: "Evening: Review & Planning", details: "Quick review of what you learned and built today. Identify any lingering questions." },
+                    { time: "3:40 PM - 4:10 PM", task: "Evening: Review & Planning", details: "Plan for tomorrow's learning. What concept will you tackle? What's the next step for your project? Update your learning roadmap." },
+                    { time: "4:00 PM - 4:45 PM", task: "Optional Activity", details: "Browse developer news, read articles, or watch a short tech talk." }
                 ],
                 weeklySchedule: {
-                    weekdays: { title: "Monday - Friday", tasks: ["Follow the daily schedule for consistent progress.", "Plan the week on Monday.", "Finish weekly features and catch up on applications on Friday."] },
-                    saturday: { title: "Saturday", tasks: ["Major Project Feature / New Small Project (3-4 hours).", "Interview Practice (2-3 hours): mock interviews, behavioral questions."] },
-                    sunday: { title: "Sunday", tasks: ["Learning & Exploration (2-3 hours): explore a new tool or concept.", "Resume/Portfolio Refinement & Weekly Review (1-2 hours).", "Rest & Recharge."] }
+                    weekdays: { title: "Monday - Thursday: Focused Learning & Project Building", tasks: [
+                        "Follow your daily plan.",
+                        "Monday: Introduce a new core concept for the week (e.g., 'Flexbox,' 'Asynchronous JavaScript,' 'React State Management,' 'Express Routes').",
+                        "Tuesday - Wednesday: Deepen understanding of the core concept. Apply it in your weekly mini-project.",
+                        "Thursday: Continue project work, troubleshoot, and add more features."
+                    ] },
+                    saturday: { title: "Friday: Weekly Mini-Project Completion & Review", tasks: [
+                        "Morning: Finish up your weekly mini-project. Ensure it's functional and presentable.",
+                        "Afternoon: Review Session (1-2 hours): Go over all concepts learned this week. Revisit notes, re-do challenging exercises. Identify areas for improvement.",
+                        "Code Review (Self or Peer): Look at your project code. How can it be cleaner? More efficient?",
+                        "Update Portfolio: Add your completed mini-project to your GitHub or personal portfolio website."
+                    ] },
+                    sunday: { title: "Saturday: Explore & Experiment / Networking / Job Prep", tasks: [
+                        "Explore (1-2 hours): Learn something new that piqued your interest this week, even if it's not directly on your roadmap (e.g., a new CSS trick, a different JavaScript library, a dev tool).",
+                        "Networking / Job Prep (1-2 hours): Update your resume/CV and LinkedIn profile with new skills and projects. Refine your LinkedIn profile. Research companies and roles that interest you. Practice coding challenges (e.g., on LeetCode, HackerRank). Attend virtual meetups or webinars if available."
+                    ] },
+                    rest: { title: "Sunday: Rest & Recharge", tasks: [
+                        "Take a break! Step away from the screen. Engage in hobbies, spend time with family/friends. A rested mind learns better.",
+                        "Optional (30 mins): Briefly plan the focus for the upcoming week."
+                    ]}
                 },
                 roadmap: [
-                    { title: "Weeks 1-2: Frontend Deep Dive & Portfolio Enhancement", content: "<strong>Focus:</strong> Master advanced React (Context API, useReducer, custom hooks), responsive design with Tailwind CSS, and integrating UI libraries (Shadcn/ui, Lucide React).<br><strong>Project Goal:</strong> Significantly enhance your portfolio or build a new, visually stunning frontend app.<br><strong>Job Search:</strong> Identify frontend-focused roles; customize resume to highlight React, CSS, and UI skills." },
-                    { title: "Weeks 3-4: Backend Fundamentals & API Building", content: "<strong>Focus:</strong> Solidify Node.js/Express (or Python/Flask) fundamentals, build RESTful APIs, understand database schema design (PostgreSQL), and implement authentication.<br><strong>Project Goal:</strong> Start a new full-stack project from scratch, building out the backend API.<br><strong>Job Search:</strong> Target full-stack or backend-leaning roles; emphasize API design and database logic." },
-                    { title: "Weeks 5-6: Full-Stack Integration, Deployment & Testing", content: "<strong>Focus:</strong> Connect your frontend and backend seamlessly. Learn deployment to cloud platforms (AWS Free Tier). Implement unit and integration tests.<br><strong>Project Goal:</strong> Complete and deploy your full-stack project live. Ensure it's well-tested and documented.<br><strong>Job Search:</strong> Intensify applications. Practice explaining your full-stack project end-to-end." }
+                    { title: "Month 1: Frontend Foundations (Weeks 1-4)", content: `
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 1: HTML Basics & Semantic Structure</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: HTML tags, semantic HTML5, forms, accessibility basics.</li>
+                            <li>Weekly Project: A multi-page personal portfolio website (static HTML/CSS).</li>
+                        </ul>
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 2: CSS Fundamentals & Layouts (Flexbox)</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: Selectors, properties, box model, responsive design principles, Flexbox.</li>
+                            <li>Weekly Project: Recreate a simple website layout using Flexbox.</li>
+                        </ul>
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 3: Advanced CSS (Grid, Animations, Responsiveness)</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: CSS Grid, transitions, animations, media queries, mobile-first design.</li>
+                            <li>Weekly Project: A responsive landing page with animations.</li>
+                        </ul>
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 4: JavaScript Basics & DOM Manipulation</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: Variables, data types, operators, control flow, functions, DOM manipulation.</li>
+                            <li>Weekly Project: A simple interactive web app (e.g., a to-do list, a calculator).</li>
+                        </ul>
+                        <p class="text-stone-600 mt-2"><strong>Monthly Project:</strong> A fully responsive, interactive personal portfolio website using HTML, CSS, and vanilla JavaScript, showcasing your best weekly projects.</p>
+                        <p class="text-stone-600"><strong>Job Prep:</strong> Start building your GitHub profile. Research different frontend roles.</p>
+                    ` },
+                    { title: "Month 2: Modern Frontend Development (React/Vue/Angular) (Weeks 5-8)", content: `
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 5: JavaScript ES6+ & Asynchronous JS</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: Arrow functions, destructuring, spread/rest, Promises, Async/Await, Fetch API.</li>
+                            <li>Weekly Project: Fetch data from a public API and display it.</li>
+                        </ul>
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 6: Introduction to React (or chosen framework)</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: Components, props, state, JSX, component lifecycle (functional components & hooks).</li>
+                            <li>Weekly Project: Build a small component library or a simple counter app.</li>
+                        </ul>
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 7: React State Management & Routing</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: useState, useEffect, useContext, basic routing (e.g., react-router-dom concepts).</li>
+                            <li>Weekly Project: A multi-page React application (e.g., a simple blog with different routes).</li>
+                        </ul>
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 8: Advanced React & API Integration</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: Custom hooks, performance optimization basics, integrating with a mock API.</li>
+                            <li>Weekly Project: A more complex React app that consumes a real (or mock) REST API (e.g., a movie search app).</li>
+                        </ul>
+                        <p class="text-stone-600 mt-2"><strong>Monthly Project:</strong> A fully functional Single Page Application (SPA) using your chosen framework, integrating with a public API, and demonstrating good component structure and state management.</p>
+                        <p class="text-stone-600"><strong>Job Prep:</strong> Start tailoring your resume for frontend roles. Begin practicing common JavaScript/framework interview questions.</p>
+                    ` },
+                    { title: "Month 3: Backend Fundamentals & Full-Stack Integration (Weeks 9-12)", content: `
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 9: Node.js & npm Basics</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: Node.js runtime, npm, modules, file system, event loop basics.</li>
+                            <li>Weekly Project: A simple command-line tool using Node.js.</li>
+                        </ul>
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 10: Express.js & REST APIs</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: Building RESTful APIs with Express.js, middleware, routing, request/response cycle.</li>
+                            <li>Weekly Project: A simple REST API for a to-do list or blog posts.</li>
+                        </ul>
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 11: Databases (e.g., MongoDB/PostgreSQL) & ORMs/ODMs</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: Introduction to databases (SQL vs. NoSQL), basic CRUD operations, connecting Node.js to a database (e.g., Mongoose for MongoDB, Sequelize for PostgreSQL).</li>
+                            <li>Weekly Project: Integrate your Express API with a database to persist data.</li>
+                        </ul>
+                        <h4 class="font-semibold text-stone-700 mt-2 mb-1">Week 12: Authentication & Deployment Basics</h4>
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li>Daily: Basic authentication concepts (e.g., JWT), environment variables, simple deployment to a free platform (e.g., Vercel for frontend, Render/Heroku for backend).</li>
+                            <li>Weekly Project: Add basic user authentication to your full-stack application.</li>
+                        </ul>
+                        <p class="text-stone-600 mt-2"><strong>Monthly Project:</strong> A full-stack application with a React (or chosen frontend) client, an Express.js backend, and a database (e.g., a simple e-commerce site, a social media clone, or a task management system). Deploy both frontend and backend.</p>
+                        <p class="text-stone-600"><strong>Job Prep:</strong> Update your resume to reflect full-stack skills. Start applying for junior frontend/full-stack roles. Prepare for technical interviews that cover both frontend and backend.</p>
+                    ` },
+                    { title: "Beyond Month 3: Continuous Growth & Specialization", content: `
+                        <ul class="list-disc list-inside text-stone-600 ml-4 space-y-1">
+                            <li><strong>Deep Dive:</strong> Choose an area to specialize or deepen your knowledge (e.g., DevOps, Cloud (AWS/Azure/GCP), specific database, WebSockets, GraphQL, testing, performance optimization).</li>
+                            <li><strong>Advanced Projects:</strong> Build more complex, real-world applications. Collaborate on open-source projects.</li>
+                            <li><strong>Continuous Learning:</strong> The tech world evolves rapidly. Keep learning new tools and best practices.</li>
+                            <li><strong>Job Applications:</strong> Continue refining your resume, portfolio, and interview skills. Network actively.</li>
+                        </ul>
+                    `}
                 ],
                 goals: [
                     { icon: "🚀", text: "Complete at least one robust full-stack application from scratch." },
                     { icon: "💻", text: "Deepen expertise in React, Node.js/Express, and database interactions." },
-                    { icon: "🧠", text: "Master core algorithms and data structures for technical interviews." },
+                    { icon: "�", text: "Master core algorithms and data structures for technical interviews." },
                     { icon: "📄", text: "Apply to 50+ relevant software engineering positions." }
                 ],
                 resources: [
@@ -182,9 +264,70 @@
                     { category: "UI Components & Charts", items: [{ name: "Shadcn/ui", url: "https://ui.shadcn.com/" }, { name: "Lucide React", url: "https://lucide.dev/guide/packages/lucide-react" }, { name: "Recharts", url: "https://recharts.org/en-US" }] }
                 ],
                 progress: {
-                    applicationsSent: 0,
-                    applicationGoal: 50
-                }
+                    applicationsSent: 0, // This will now be the running total
+                    applicationGoal: 50,
+                    dailyApplications: {} // Stores applications added per date
+                },
+                // Structured data for Job Application Strategy
+                jobStrategyDetails: [
+                    {
+                        heading: "Build a Strong Portfolio (Ongoing)",
+                        items: [
+                            "Your projects are your resume. Make sure they are well-documented, clean, and hosted (e.g., on GitHub Pages, Netlify, Vercel for frontend; Render, Heroku for backend).",
+                            "Showcase variety: demonstrate your skills in different areas (responsive design, API integration, database interaction, authentication)."
+                        ]
+                    },
+                    {
+                        heading: "Craft a Compelling Resume/CV",
+                        items: [
+                            "Highlight your projects and the technologies you used.",
+                            "Focus on what you can do rather than just what you know.",
+                            "Use keywords relevant to the jobs you're applying for.",
+                            "Keep it concise and easy to read."
+                        ]
+                    },
+                    {
+                        heading: "Optimize Your LinkedIn Profile",
+                        items: [
+                            "Treat it as an online resume.",
+                            "Connect with recruiters and developers in your target companies/industries.",
+                            "Share your learning progress and projects."
+                        ]
+                    },
+                    {
+                        heading: "Networking",
+                        items: [
+                            "Attend virtual meetups, webinars, and online conferences.",
+                            "Engage in developer communities (Discord, Reddit, Stack Overflow).",
+                            "Informational interviews: connect with people in roles you aspire to and ask about their experiences."
+                        ]
+                    },
+                    {
+                        heading: "Start Applying (After Month 2/3, or when you feel confident with a few projects)",
+                        items: [
+                            "Junior Roles: Look for 'Junior Developer,' 'Entry-Level Developer,' 'Associate Developer,' 'Trainee' positions.",
+                            "Tailor Applications: Customize your resume and cover letter for each job description.",
+                            "Quantity & Quality: Apply to a reasonable number of jobs, but ensure each application is thoughtful.",
+                            "Leverage Job Boards: LinkedIn Jobs, Indeed, Glassdoor, local tech job boards."
+                        ]
+                    },
+                    {
+                        heading: "Prepare for Interviews",
+                        items: [
+                            "Technical Interviews: Practice coding challenges (LeetCode, HackerRank), understand data structures and algorithms, be ready to explain your projects.",
+                            "Behavioral Interviews: Prepare answers for common questions about teamwork, problem-solving, and handling challenges.",
+                            "System Design (for more senior roles, but good to be aware of): Understand how different parts of a system interact."
+                        ]
+                    },
+                    {
+                        heading: "Don't Get Discouraged",
+                        items: [
+                            "Job searching can be tough. Rejection is part of the process.",
+                            "Learn from every interview. Ask for feedback if possible.",
+                            "Keep building and improving your skills."
+                        ]
+                    }
+                ],
             };
 
             const state = {
@@ -192,87 +335,208 @@
             };
             
             let progressChart;
+            let dailyApplicationsChart; // New chart instance
+            const currentTabTitleEl = document.getElementById('current-tab-title');
+            const currentTabDescriptionEl = document.getElementById('current-tab-description');
+            const clearAllBtn = document.getElementById('clear-all-btn');
+            const dynamicContentArea = document.getElementById('dynamic-content-area'); // Get the new dynamic content area
+
+            const tabInfo = {
+                today: { title: "Today's Plan", description: "Daily Learning Plan (Approx. 2-4 hours dedicated study). This is a flexible template. Adjust based on your energy levels and available time.", clearText: "Clear All Tasks" },
+                weekly: { title: "Weekly View", description: "Each week will have a primary focus, a mini-project, and dedicated time for review and job prep." },
+                roadmap: { title: "Learning Roadmap", description: "This is a suggested progression for your learning journey. Adjust based on your current knowledge and pace." },
+                goals: { title: "Goals & Progress", description: "Track your progress towards your overall summer goals." }, // Removed clearText for this tab
+                resources: { title: "Resources", description: "A curated list of free resources to aid your learning journey.", clearText: "Clear Search" },
+                jobStrategy: { title: "Job Application Strategy", description: "Applying for jobs is a marathon, not a sprint. Here's a comprehensive approach to your job search." }
+            };
+
+            // Dynamically inject Job Strategy content when the tab is activated
+            function renderJobStrategy() {
+                if (dynamicContentArea) {
+                    let contentHtml = '';
+                    appData.jobStrategyDetails.forEach(section => {
+                        contentHtml += `
+                            <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm mb-6">
+                                <h3 class="text-xl font-bold text-stone-800 mb-4">${section.heading}</h3>
+                                <ul class="list-disc list-inside text-stone-600 space-y-2">
+                                    ${section.items.map(item => `<li>${item}</li>`).join('')}
+                                </ul>
+                            </div>
+                        `;
+                    });
+                    contentHtml += `<p class="text-stone-600 mt-2">This plan provides a solid framework. Remember to be flexible, listen to your own learning style, and celebrate your progress along the way. Good luck on your exciting journey into frontend and full-stack development!</p>`;
+                    dynamicContentArea.innerHTML = contentHtml;
+                    console.log('Job Strategy content injected.');
+                } else {
+                    console.error('Error: #dynamic-content-area not found for Job Strategy.');
+                }
+            }
 
             function renderDailySchedule() {
-                const container = document.getElementById('daily-schedule-container');
-                container.innerHTML = '';
-                const now = new Date();
-                const currentHour = now.getHours();
+                if (dynamicContentArea) {
+                    let contentHtml = '<div class="space-y-4">'; // Wrap in a div for consistent styling
+                    appData.dailySchedule.forEach((item, index) => {
+                        const card = `
+                            <div class="task-card bg-white p-5 rounded-xl border border-stone-200 shadow-sm transition-all">
+                                <div class="flex items-start">
+                                    <div class="flex items-center h-5">
+                                        <input id="task-${index}" type="checkbox" class="focus:ring-teal-500 h-5 w-5 text-teal-600 border-stone-300 rounded">
+                                    </div>
+                                    <div class="ml-4 text-sm flex-1">
+                                        <label for="task-${index}" class="font-bold text-stone-800">${item.time}: ${item.task}</label>
+                                        <p class="text-stone-500">${item.details}</p>
+                                    </div>
+                                </div>
+                            </div>`;
+                        contentHtml += card;
+                    });
+                    contentHtml += '</div>';
+                    dynamicContentArea.innerHTML = contentHtml;
+                    console.log('Daily Schedule content injected.');
+                } else {
+                    console.error('Error: #dynamic-content-area not found for Daily Schedule.');
+                }
+            }
 
-                appData.dailySchedule.forEach((item, index) => {
-                    const startHour = parseInt(item.time.split(':')[0]);
-                    const isCurrent = currentHour >= startHour && (appData.dailySchedule[index+1] ? currentHour < parseInt(appData.dailySchedule[index+1].time.split(':')[0]) : true);
-                    
-                    const card = `
-                        <div class="task-card bg-white p-5 rounded-xl border border-stone-200 shadow-sm transition-all ${isCurrent ? 'border-teal-500 ring-2 ring-teal-100' : ''}">
-                            <div class="flex items-start">
-                                <div class="flex items-center h-5">
-                                    <input id="task-${index}" type="checkbox" class="focus:ring-teal-500 h-5 w-5 text-teal-600 border-stone-300 rounded">
-                                </div>
-                                <div class="ml-4 text-sm flex-1">
-                                    <label for="task-${index}" class="font-bold text-stone-800">${item.time}: ${item.task}</label>
-                                    <p class="text-stone-500">${item.details}</p>
-                                </div>
-                            </div>
-                        </div>`;
-                    container.innerHTML += card;
+            function resetTodayTasks() {
+                // Select checkboxes directly from the dynamic content area
+                document.querySelectorAll('#dynamic-content-area input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = false;
+                    checkbox.closest('.task-card')?.classList.remove('opacity-60'); 
+                    const labelElement = checkbox.closest('.task-card')?.querySelector('label'); 
+                    if (labelElement) {
+                        labelElement.style.textDecoration = 'none';
+                    }
                 });
             }
 
             function renderWeeklySchedule() {
-                const weekdayContainer = document.getElementById('weekday-schedule-container');
-                const saturdayContainer = document.getElementById('saturday-schedule-container');
-                const sundayContainer = document.getElementById('sunday-schedule-container');
-                
-                const createCard = (day) => `
-                    <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm h-full">
-                        <h3 class="text-xl font-bold mb-4">${day.title}</h3>
-                        <ul class="space-y-3 list-disc list-inside text-stone-600">
-                            ${day.tasks.map(task => `<li>${task}</li>`).join('')}
-                        </ul>
-                    </div>
-                `;
-
-                weekdayContainer.innerHTML = createCard(appData.weeklySchedule.weekdays);
-                saturdayContainer.innerHTML = createCard(appData.weeklySchedule.saturday);
-                sundayContainer.innerHTML = createCard(appData.weeklySchedule.sunday);
+                if (dynamicContentArea) {
+                    let contentHtml = `
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm h-full">
+                                <h3 class="text-xl font-bold mb-4">${appData.weeklySchedule.weekdays.title}</h3>
+                                <ul class="space-y-3 list-disc list-inside text-stone-600">
+                                    ${appData.weeklySchedule.weekdays.tasks.map(task => `<li>${task}</li>`).join('')}
+                                </ul>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm h-full">
+                                <h3 class="text-xl font-bold mb-4">${appData.weeklySchedule.saturday.title}</h3>
+                                <ul class="space-y-3 list-disc list-inside text-stone-600">
+                                    ${appData.weeklySchedule.saturday.tasks.map(task => `<li>${task}</li>`).join('')}
+                                </ul>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm h-full">
+                                <h3 class="text-xl font-bold mb-4">${appData.weeklySchedule.rest.title}</h3>
+                                <ul class="space-y-3 list-disc list-inside text-stone-600">
+                                    ${appData.weeklySchedule.rest.tasks.map(task => `<li>${task}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                    dynamicContentArea.innerHTML = contentHtml;
+                    console.log('Weekly Schedule content injected.');
+                } else {
+                    console.error('Error: #dynamic-content-area not found for Weekly Schedule.');
+                }
             }
 
             function renderRoadmap() {
-                const container = document.getElementById('roadmap-container');
-                container.innerHTML = '';
-                appData.roadmap.forEach((item, index) => {
-                    const accordion = `
-                        <div class="accordion-item bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
-                            <button class="accordion-header w-full flex justify-between items-center p-5 text-left font-semibold text-stone-800 hover:bg-stone-50">
-                                <span>${item.title}</span>
-                                <span class="transform transition-transform duration-300">▼</span>
-                            </button>
-                            <div class="accordion-content hidden p-5 border-t border-stone-200 bg-white">
-                                <p class="text-stone-600">${item.content}</p>
-                            </div>
-                        </div>`;
-                    container.innerHTML += accordion;
-                });
+                if (dynamicContentArea) {
+                    let contentHtml = '<div class="space-y-4">';
+                    appData.roadmap.forEach((item, index) => {
+                        const accordion = `
+                            <div class="accordion-item bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
+                                <button class="accordion-header w-full flex justify-between items-center p-5 text-left font-semibold text-stone-800 hover:bg-stone-50">
+                                    <span>${item.title}</span>
+                                    <span class="transform transition-transform duration-300">▼</span>
+                                </button>
+                                <div class="accordion-content hidden p-5 border-t border-stone-200 bg-white">
+                                    <p class="text-stone-600">${item.content}</p>
+                                </div>
+                            </div>`;
+                        contentHtml += accordion;
+                    });
+                    contentHtml += '</div>';
+                    dynamicContentArea.innerHTML = contentHtml;
+                    // Re-attach accordion event listeners
+                    document.querySelectorAll('.accordion-header').forEach(header => {
+                        header.addEventListener('click', function() {
+                            const content = this.nextElementSibling;
+                            const icon = this.querySelector('span:last-child');
+                            if (content) {
+                                content.classList.toggle('hidden');
+                            }
+                            if (icon) {
+                                icon.classList.toggle('rotate-180');
+                            }
+                        });
+                    });
+                    console.log('Roadmap content injected.');
+                } else {
+                    console.error('Error: #dynamic-content-area not found for Roadmap.');
+                }
             }
             
             function renderGoals() {
-                const container = document.getElementById('overall-goals-container');
-                container.innerHTML = '';
-                appData.goals.forEach(goal => {
-                    const goalEl = `
-                        <div class="flex items-start bg-white p-4 rounded-xl border border-stone-200 shadow-sm">
-                            <span class="text-2xl mr-4">${goal.icon}</span>
-                            <p class="text-stone-700 font-medium">${goal.text}</p>
+                if (dynamicContentArea) {
+                    let contentHtml = `
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div id="overall-goals-container" class="space-y-4">
+                                ${appData.goals.map(goal => `
+                                    <div class="flex items-start bg-white p-4 rounded-xl border border-stone-200 shadow-sm">
+                                        <span class="text-2xl mr-4">${goal.icon}</span>
+                                        <p class="text-stone-700 font-medium">${goal.text}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div>
+                                <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm mb-8">
+                                    <h3 class="text-lg font-semibold mb-4">Total Job Application Progress</h3>
+                                    <div class="chart-container relative mx-auto">
+                                        <canvas id="progressChart"></canvas>
+                                    </div>
+                                    <div class="mt-6">
+                                        <label for="application-count" class="block text-sm font-medium text-stone-600">Add/Subtract applications:</label>
+                                        <div class="mt-1 flex rounded-md shadow-sm">
+                                            <input type="number" id="application-count" class="block w-full rounded-none rounded-l-md border-stone-300 focus:border-teal-500 focus:ring-teal-500 sm:text-sm" placeholder="e.g., 5 or -2">
+                                            <button id="update-progress-btn" class="relative -ml-px inline-flex items-center space-x-2 rounded-r-md border border-stone-300 bg-stone-50 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-100 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">Update Total</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+                                    <h3 class="text-lg font-semibold mb-4">Daily Applications Added</h3>
+                                    <div class="daily-chart-container relative mx-auto">
+                                        <canvas id="dailyApplicationsChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     `;
-                    container.innerHTML += goalEl;
-                });
-                renderProgressChart();
+                    dynamicContentArea.innerHTML = contentHtml;
+                    // Re-initialize charts after content is injected
+                    renderProgressChart();
+                    renderDailyApplicationsChart();
+                    // Re-attach event listeners for dynamically created elements
+                    document.getElementById('update-progress-btn')?.addEventListener('click', handleUpdateProgress);
+                    document.getElementById('application-count')?.addEventListener('keydown', handleApplicationCountKeydown);
+                    console.log('Goals content injected and charts rendered.');
+                } else {
+                    console.error('Error: #dynamic-content-area not found for Goals.');
+                }
             }
 
+            // Moved chart rendering functions outside renderGoals to be callable directly
             function renderProgressChart() {
-                const ctx = document.getElementById('progressChart').getContext('2d');
+                const ctx = document.getElementById('progressChart')?.getContext('2d');
+                if (!ctx) { console.error('progressChart canvas context not found'); return; }
+
+                // Destroy existing chart instance if it exists
+                if (progressChart) {
+                    progressChart.destroy();
+                }
+
                 const data = {
                     labels: ['Sent', 'Remaining'],
                     datasets: [{
@@ -284,78 +548,220 @@
                     }]
                 };
 
-                if (progressChart) {
-                    progressChart.data = data;
-                    progressChart.update();
-                } else {
-                    progressChart = new Chart(ctx, {
-                        type: 'doughnut',
-                        data: data,
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            cutout: '70%',
-                            plugins: {
-                                legend: {
-                                    display: false
-                                },
-                                tooltip: {
-                                    enabled: true
+                progressChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                enabled: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            function renderDailyApplicationsChart() {
+                const ctx = document.getElementById('dailyApplicationsChart')?.getContext('2d');
+                if (!ctx) { console.error('dailyApplicationsChart canvas context not found'); return; }
+
+                // Destroy existing chart instance if it exists
+                if (dailyApplicationsChart) {
+                    dailyApplicationsChart.destroy();
+                }
+
+                const dates = Object.keys(appData.progress.dailyApplications).sort();
+                const dataPoints = dates.map(date => appData.progress.dailyApplications[date]);
+
+                const data = {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Applications Added',
+                        data: dataPoints,
+                        backgroundColor: '#14b8a6',
+                        borderColor: '#0f766e',
+                        borderWidth: 1
+                    }]
+                };
+
+                dailyApplicationsChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                enabled: true
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Number of Applications'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Date'
                                 }
                             }
                         }
-                    });
-                }
+                    }
+                });
             }
 
             function renderResources() {
-                const container = document.getElementById('resources-container');
-                container.innerHTML = '';
-                const searchTerm = document.getElementById('resource-search').value.toLowerCase();
+                if (dynamicContentArea) {
+                    let contentHtml = '<input type="text" id="resource-search" class="w-full max-w-lg p-3 mb-6 border border-stone-300 rounded-lg focus:ring-2 focus:ring-teal-500" placeholder="Search for a resource (e.g., React, LeetCode)..."><div id="resources-container" class="space-y-6">';
+                    
+                    appData.resources.forEach(category => {
+                        // Filter items based on current search term (will be re-evaluated on input)
+                        const searchTerm = document.getElementById('resource-search')?.value.toLowerCase() || '';
+                        const filteredItems = category.items.filter(item => item.name.toLowerCase().includes(searchTerm));
+                        
+                        if (filteredItems.length > 0) {
+                            let itemsHtml = filteredItems.map(item => `
+                                <a href="${item.url}" target="_blank" class="block bg-white p-4 rounded-lg border border-stone-200 hover:border-teal-500 hover:shadow-md transition-all">
+                                    <p class="font-semibold text-teal-700">${item.name}</p>
+                                </a>
+                            `).join('');
 
-                appData.resources.forEach(category => {
-                    const filteredItems = category.items.filter(item => item.name.toLowerCase().includes(searchTerm));
-                    if (filteredItems.length > 0) {
-                        let itemsHtml = filteredItems.map(item => `
-                            <a href="${item.url}" target="_blank" class="block bg-white p-4 rounded-lg border border-stone-200 hover:border-teal-500 hover:shadow-md transition-all">
-                                <p class="font-semibold text-teal-700">${item.name}</p>
-                            </a>
-                        `).join('');
-
-                        container.innerHTML += `
-                            <div>
-                                <h3 class="text-xl font-bold text-stone-800 mb-4">${category.category}</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    ${itemsHtml}
+                            contentHtml += `
+                                <div>
+                                    <h3 class="text-xl font-bold text-stone-800 mb-4">${category.category}</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        ${itemsHtml}
+                                    </div>
                                 </div>
-                            </div>
-                        `;
-                    }
-                });
+                            `;
+                        }
+                    });
+                    contentHtml += '</div>';
+                    dynamicContentArea.innerHTML = contentHtml;
+                    // Re-attach event listener for search bar after it's in the DOM
+                    document.getElementById('resource-search')?.addEventListener('input', renderResources);
+                    console.log('Resources content injected.');
+                } else {
+                    console.error('Error: #dynamic-content-area not found for Resources.');
+                }
+            }
+
+            function resetResourcesSearch() {
+                const resourceSearchInput = document.getElementById('resource-search');
+                if (resourceSearchInput) {
+                    resourceSearchInput.value = '';
+                }
+                renderResources();
             }
 
             function switchTab(tabId) {
                 state.activeTab = tabId;
-                document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
-                document.getElementById(tabId).classList.add('active');
+                
+                // Clear the dynamic content area first
+                if (dynamicContentArea) {
+                    dynamicContentArea.innerHTML = '';
+                }
 
+                // Update active navigation link styling
                 document.querySelectorAll('.nav-link').forEach(link => {
-                    link.classList.remove('bg-teal-50', 'text-teal-700');
-                    if (link.dataset.tab === tabId) {
-                        link.classList.add('bg-teal-50', 'text-teal-700');
+                    if (link) { 
+                        link.classList.remove('bg-teal-50', 'text-teal-700');
+                        if (link.dataset.tab === tabId) {
+                            link.classList.add('bg-teal-50', 'text-teal-700');
+                        }
                     }
                 });
 
+                // Set title and description for the current tab
+                if (currentTabTitleEl) {
+                    currentTabTitleEl.textContent = tabInfo[tabId]?.title ?? ""; 
+                }
+                if (currentTabDescriptionEl) {
+                    currentTabDescriptionEl.textContent = tabInfo[tabId]?.description ?? ""; 
+                }
+
+                // Show/hide Clear All button and set its text based on tab
+                if (clearAllBtn) { 
+                    if (tabInfo[tabId]?.clearText) {
+                        clearAllBtn.classList.remove('hidden');
+                        clearAllBtn.textContent = tabInfo[tabId].clearText;
+                    } else {
+                        clearAllBtn.classList.add('hidden');
+                    }
+                }
+
+                // Call the appropriate rendering function for the active tab
                 switch (tabId) {
                     case 'today': renderDailySchedule(); break;
                     case 'weekly': renderWeeklySchedule(); break;
                     case 'roadmap': renderRoadmap(); break;
                     case 'goals': renderGoals(); break;
                     case 'resources': renderResources(); break;
+                    case 'jobStrategy': renderJobStrategy(); break; 
                 }
             }
 
-            document.querySelector('.flex').addEventListener('click', function(e) {
+            function clearActiveTab() {
+                switch (state.activeTab) {
+                    case 'today':
+                        resetTodayTasks();
+                        break;
+                    case 'resources':
+                        resetResourcesSearch();
+                        break;
+                    // No case for 'goals' here, as it no longer has a reset button
+                }
+            }
+
+            function getFormattedDate(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            // Event handler for updating progress (moved outside switchTab)
+            function handleUpdateProgress() {
+                const applicationCountInput = document.getElementById('application-count');
+                let newCount = parseInt(applicationCountInput?.value); // Use optional chaining
+
+                if (!isNaN(newCount)) { 
+                    const today = getFormattedDate(new Date());
+
+                    appData.progress.dailyApplications[today] = Math.max(0, (appData.progress.dailyApplications[today] || 0) + newCount);
+                    appData.progress.applicationsSent = Math.max(0, appData.progress.applicationsSent + newCount); 
+                    
+                    renderProgressChart();
+                    renderDailyApplicationsChart(); 
+                    if (applicationCountInput) { // Use optional chaining
+                        applicationCountInput.value = ''; 
+                    }
+                }
+            }
+
+            // Event handler for keydown on application count input (moved outside switchTab)
+            function handleApplicationCountKeydown(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault(); 
+                    handleUpdateProgress(); // Call the shared update function
+                }
+            }
+
+            // Attach global event listeners
+            document.querySelector('.flex')?.addEventListener('click', function(e) { // Use optional chaining
                 if (e.target.closest('.nav-link')) {
                     e.preventDefault();
                     switchTab(e.target.closest('.nav-link').dataset.tab);
@@ -363,25 +769,22 @@
                 if (e.target.closest('.accordion-header')) {
                     const content = e.target.closest('.accordion-header').nextElementSibling;
                     const icon = e.target.closest('.accordion-header').querySelector('span:last-child');
-                    content.classList.toggle('hidden');
-                    icon.classList.toggle('rotate-180');
+                    if (content) { 
+                        content.classList.toggle('hidden');
+                    }
+                    if (icon) { 
+                        icon.classList.toggle('rotate-180');
+                    }
                 }
             });
             
-            document.getElementById('update-progress-btn').addEventListener('click', function() {
-                const countInput = document.getElementById('application-count');
-                const newCount = parseInt(countInput.value);
-                if (!isNaN(newCount) && newCount >= 0) {
-                    appData.progress.applicationsSent = newCount;
-                    renderProgressChart();
-                    countInput.value = '';
-                }
-            });
+            if (clearAllBtn) {
+                clearAllBtn.addEventListener('click', clearActiveTab);
+            }
 
-            document.getElementById('resource-search').addEventListener('input', renderResources);
-
+            // Initial tab load
             switchTab('today');
-            setInterval(renderDailySchedule, 60000); 
+            // setInterval(renderDailySchedule, 60000); // Removed for now to prevent potential conflicts during debugging
         });
     </script>
 </body>
